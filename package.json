@@ -20,5 +20,8 @@
     "url": "https://github.com/ayushluck/BoltChat/issues"
   },
   "homepage": "https://github.com/ayushluck/BoltChat#readme",
-  "description": ""
+  "description": "",
+  "dependencies": {
+    "resend": "^6.0.2"
+  }
 }

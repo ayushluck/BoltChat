@@ -1,22 +1,29 @@
 import User from '../models/User.js';
 import bcrypt from 'bcryptjs';
 import { generateToken } from '../lib/util.js';
-
+import { sentWelcomeEmail } from '../emails/emailHandlers.js';
+import ENV from '../lib/env.js';
 export const signup = async (req,res) => {
     const {fullname,email,password} = req.body;
     try{
-        if(!fullname || !email || !password){
+        const trimmedFullname = fullname?.trim();
+        const normalizedEmail = email?.toLowerCase().trim();
+
+        if(!trimmedFullname || !normalizedEmail || !password){
             return res.status(400).json({message:"All fields are required"});
+        }
+        if(!/[a-zA-Z]/.test(trimmedFullname)){
+            return res.status(400).json({message:"Full name must contain at least one letter"});
         }
         if(password.length < 6){
             return res.status(400).json({message:"Password must be at least 6 characters"});
         }
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if(!emailRegex.test(email)){
+        if(!emailRegex.test(normalizedEmail)){
             return res.status(400).json({message:"Invalid email format"});
         }
         const user = await User.findOne({
-            email:email,
+            email:normalizedEmail,
         });
         if(user){
             return res.status(400).json({message:"Account with this email already exists"});
@@ -24,8 +31,8 @@ export const signup = async (req,res) => {
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password,salt);
         const newUser = new User({
-            fullname,
-            email,
+            fullname:trimmedFullname,
+            email:normalizedEmail,
             password:hashedPassword
         });
 
@@ -40,6 +47,11 @@ export const signup = async (req,res) => {
             });
         }else{
             res.status(400).json({message:"Invalid user data"});
+        }
+        try {
+            await sentWelcomeEmail(newUser.email, newUser.fullname, ENV.CLIENT_URL);
+        } catch (err) {
+            console.warn("Signup completed, but welcome email was not sent:", err.message);
         }
     }catch(err){
         console.error("Error during signup:", err);
