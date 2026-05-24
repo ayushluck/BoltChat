@@ -6,6 +6,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import connectDB from './lib/db.js';
 import ENV from './lib/env.js';
+import cookieParser from 'cookie-parser';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -15,6 +16,12 @@ const frontendDistPath = path.join(__dirname, '../../Frontend/dist');
 app.use(express.json());
 app.use("/api/auth", authRoutes);
 app.use("/api/messages", messageRoutes);
+app.use(cookieParser());
+
+const server = app.listen(Port, ()=>{
+    console.log(`Server is running on port ${Port}`);
+    connectDB();
+});
 
 if(ENV.NODE_ENV === 'production'){
     app.use(express.static(frontendDistPath));
@@ -22,11 +29,6 @@ if(ENV.NODE_ENV === 'production'){
         res.sendFile(path.join(frontendDistPath, 'index.html'));
     });
 }
-
-const server = app.listen(Port, ()=>{
-    console.log(`Server is running on port ${Port}`);
-    connectDB();
-});
 
 server.on('error', (err) => {
     if (err.code === 'EADDRINUSE') {
