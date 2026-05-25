@@ -14,9 +14,9 @@ const Port = ENV.PORT || 3000;
 const frontendDistPath = path.join(__dirname, '../../Frontend/dist');
 
 app.use(express.json());
+app.use(cookieParser());
 app.use("/api/auth", authRoutes);
 app.use("/api/messages", messageRoutes);
-app.use(cookieParser());
 
 const server = app.listen(Port, ()=>{
     console.log(`Server is running on port ${Port}`);
