@@ -7,6 +7,7 @@ import { fileURLToPath } from 'url';
 import connectDB from './lib/db.js';
 import ENV from './lib/env.js';
 import cookieParser from 'cookie-parser';
+import cors from 'cors';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -14,6 +15,7 @@ const Port = ENV.PORT || 3000;
 const frontendDistPath = path.join(__dirname, '../../Frontend/dist');
 
 app.use(express.json());
+app.use(cors({origin: ENV.CLIENT_URL || "http://localhost:5173", credentials: true}));
 app.use(cookieParser());
 app.use("/api/auth", authRoutes);
 app.use("/api/messages", messageRoutes);
