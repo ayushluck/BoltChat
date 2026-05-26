@@ -102,7 +102,7 @@ const SignUpPage = () => {
         </BorderAnimatedContainer>
       </div>
     </div>
-  )
+  );
 }
 
 export default SignUpPage;
