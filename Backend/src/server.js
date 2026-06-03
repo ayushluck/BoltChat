@@ -14,11 +14,19 @@ const __dirname = path.dirname(__filename);
 const Port = ENV.PORT || 3000;
 const frontendDistPath = path.join(__dirname, '../../Frontend/dist');
 
-app.use(express.json());
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 app.use(cors({origin: ENV.CLIENT_URL || "http://localhost:5173", credentials: true}));
 app.use(cookieParser());
 app.use("/api/auth", authRoutes);
 app.use("/api/messages", messageRoutes);
+
+app.use((err, _req, res, next) => {
+    if (err?.type === "entity.too.large") {
+        return res.status(413).json({ message: "Image is too large. Please upload a smaller image." });
+    }
+    next(err);
+});
 
 const server = app.listen(Port, ()=>{
     console.log(`Server is running on port ${Port}`);

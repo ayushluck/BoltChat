@@ -5,6 +5,13 @@ import { sentWelcomeEmail } from '../emails/emailHandlers.js';
 import ENV from '../lib/env.js';
 import cloudinary from '../lib/cloudinary.js';
 
+const userResponse = (user) => ({
+    _id: user._id,
+    fullName: user.fullname,
+    email: user.email,
+    profilePic: user.profilePic,
+});
+
 export const signup = async (req, res) => {
     const { fullname, email, password } = req.body;
     try {
@@ -41,12 +48,7 @@ export const signup = async (req, res) => {
         if (newUser) {
             generateToken(newUser._id, res);
             await newUser.save();
-            res.status(201).json({
-                _id: newUser._id,
-                fullName: newUser.fullname,
-                email: newUser.email,
-                profilePic: newUser.profilePic,
-            });
+            res.status(201).json(userResponse(newUser));
         } else {
             res.status(400).json({ message: "Invalid user data" });
         }
@@ -79,12 +81,7 @@ export const login = async (req, res) => {
             return res.status(400).json({ message: "Invalid credentials" });
         }
         generateToken(user._id, res);
-        res.json({
-            _id: user._id,
-            fullName: user.fullname,
-            email: user.email,
-            profilePic: user.profilePic,
-        });
+        res.json(userResponse(user));
     } catch (err) {
         console.error("Error during login:", err);
         res.status(500).json({ message: "Server error" });
@@ -108,9 +105,13 @@ export const updateProfile = async (req, res) => {
         const userId = req.user._id;
         const uploadResponse = await cloudinary.uploader.upload(profilePic);
         const updatedUser = await User.findByIdAndUpdate(userId, { profilePic: uploadResponse.secure_url }, { new: true });
-        res.status(200).json(updatedUser);
+        res.status(200).json(userResponse(updatedUser));
     } catch (err) {
         console.error("Error updating profile:", err);
         res.status(500).json({ message: "Server error" });
     }
+}
+
+export const checkAuth = (req, res) => {
+    res.status(200).json(userResponse(req.user));
 }
