@@ -1,11 +1,19 @@
 import cloudinary from '../lib/cloudinary.js';
 import User from '../models/User.js';
 import Message from '../models/message.js';
+
+const userResponse = (user) => ({
+    _id: user._id,
+    fullName: user.fullname,
+    email: user.email,
+    profilePic: user.profilePic,
+});
+
 export const getAllContacts = async( req, res) => {
     try{
         const loggedInUserId = req.user._id;
         const filteredUsers = await User.find({ _id: { $ne: loggedInUserId } }).select('-password');
-        res.status(200).json(filteredUsers);
+        res.status(200).json(filteredUsers.map(userResponse));
     }catch(err){
         console.error('Error fetching contacts:', err);
         res.status(500).json({ message: 'Error fetching contacts' });
@@ -64,7 +72,7 @@ export const getChatPartners = async(req, res) => {
         });
         const chatPartnerIds = [...new Set(messages.map(msg => msg.senderId === loggedInUserId.toString() ? msg.receiverId.toString() : msg.senderId.toString()))];
         const chatPartners = await User.find({ _id: { $in: chatPartnerIds } }).select('-password');
-        res.status(200).json(chatPartners);
+        res.status(200).json(chatPartners.map(userResponse));
     } catch (error) {
         console.error('Error fetching chat partners:', error);
         res.status(500).json({ message: 'Error fetching chat partners' });
