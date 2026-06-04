@@ -12,6 +12,7 @@ function ChatContainer() {
     getMessagesByUserId,
     messages,
     isMessagesLoading,
+    sendMessage,
     subscribeToMessages,
     unsubscribeFromMessages,
   } = useChatStore();
@@ -69,7 +70,7 @@ function ChatContainer() {
         ) : isMessagesLoading ? (
           <MessagesLoadingSkeleton />
         ) : (
-          <NoChatHistoryPlaceholder name={selectedUser.fullName} />
+          <NoChatHistoryPlaceholder name={selectedUser.fullName} onSendMessage={sendMessage} />
         )}
       </div>
 
