@@ -20,6 +20,12 @@
   }
 }
 
+@layer components {
+  .avatar.offline::before {
+    @apply bg-red-500;
+  }
+}
+
 @property --border-angle {
   inherits: false;
   initial-value: 0deg;

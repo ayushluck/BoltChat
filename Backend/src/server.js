@@ -1,5 +1,4 @@
 import express from 'express';
-const app = express();
 import authRoutes from './routes/auth.route.js';
 import messageRoutes from './routes/message.route.js';
 import path from 'path';
@@ -8,7 +7,7 @@ import connectDB from './lib/db.js';
 import ENV from './lib/env.js';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
-
+import { app, server as httpServer } from './lib/socket.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const Port = ENV.PORT || 3000;
@@ -28,7 +27,7 @@ app.use((err, _req, res, next) => {
     next(err);
 });
 
-const server = app.listen(Port, ()=>{
+const server = httpServer.listen(Port, ()=>{
     console.log(`Server is running on port ${Port}`);
     connectDB();
 });
