@@ -9,12 +9,12 @@ const userResponse = (user) => ({
     profilePic: user.profilePic,
 });
 
-export const getAllContacts = async( req, res) => {
-    try{
+export const getAllContacts = async (req, res) => {
+    try {
         const loggedInUserId = req.user._id;
         const filteredUsers = await User.find({ _id: { $ne: loggedInUserId } }).select('-password');
         res.status(200).json(filteredUsers.map(userResponse));
-    }catch(err){
+    } catch (err) {
         console.error('Error fetching contacts:', err);
         res.status(500).json({ message: 'Error fetching contacts' });
     }
@@ -22,14 +22,14 @@ export const getAllContacts = async( req, res) => {
 
 export const getMessagesByUserId = async (req, res) => {
     try {
-    const myId = req.user._id;
-    const {id:userToChatId} = req.params;
-    const message = await Message.find({
-        $or:[
-                {senderId:myId, receiverId:userToChatId},
-                {senderId:userToChatId, receiverId:myId}
+        const myId = req.user._id;
+        const { id: userToChatId } = req.params;
+        const message = await Message.find({
+            $or: [
+                { senderId: myId, receiverId: userToChatId },
+                { senderId: userToChatId, receiverId: myId }
             ]
-        }).sort({createdAt:1});
+        }).sort({ createdAt: 1 });
         res.status(200).json(message);
     } catch (error) {
         console.error('Error fetching messages:', error);
@@ -39,12 +39,12 @@ export const getMessagesByUserId = async (req, res) => {
 
 export const sendMessage = async (req, res) => {
     try {
-        const {text, image} = req.body;
-        const {id: receiverId} = req.params;
+        const { text, image } = req.body;
+        const { id: receiverId } = req.params;
         const senderId = req.user._id;
 
         let imageUrl;
-        if(image){
+        if (image) {
             const uploadResponse = await cloudinary.uploader.upload(image);
             imageUrl = uploadResponse.secure_url;
         }
@@ -58,8 +58,8 @@ export const sendMessage = async (req, res) => {
 
         //todo send real-time notification to receiver using socket.io
         const receiverSocketId = getReceiverSocketId(receiverId);
-        if(receiverSocketId){
-            io.to(receiverSocketId).emit("newMessage",newMessage);
+        if (receiverSocketId) {
+            io.to(receiverSocketId).emit("newMessage", newMessage);
         }
         res.status(201).json(newMessage);
     } catch (error) {
@@ -68,13 +68,17 @@ export const sendMessage = async (req, res) => {
     }
 }
 
-export const getChatPartners = async(req, res) => {
+export const getChatPartners = async (req, res) => {
     try {
         const loggedInUserId = req.user._id;
         const messages = await Message.find({
-            $or:[{senderId:loggedInUserId}, {receiverId:loggedInUserId}]
+            $or: [{ senderId: loggedInUserId }, { receiverId: loggedInUserId }]
         });
-        const chatPartnerIds = [...new Set(messages.map(msg => msg.senderId === loggedInUserId.toString() ? msg.receiverId.toString() : msg.senderId.toString()))];
+        const chatPartnerIds = [...new Set(messages.map(msg => {
+            const senderIdStr = msg.senderId.toString();
+            const receiverIdStr = msg.receiverId.toString();
+            return senderIdStr === loggedInUserId.toString() ? receiverIdStr : senderIdStr;
+        }))].filter(id => id !== loggedInUserId.toString());
         const chatPartners = await User.find({ _id: { $in: chatPartnerIds } }).select('-password');
         res.status(200).json(chatPartners.map(userResponse));
     } catch (error) {
