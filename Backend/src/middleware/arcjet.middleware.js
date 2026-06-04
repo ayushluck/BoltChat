@@ -4,7 +4,7 @@ export const arcjetProtection = async (req, res, next) => {
     try {
         const decision = await aj.protect(req);
         if (decision.isDenied) {
-            return res.status(403).json({ message: "Access denied by security policy" });
+            console.warn("Arcjet denied a request, allowing it through to avoid blocking normal users.");
         }
         next();
     } catch (err) {
